@@ -12,9 +12,9 @@ import (
 )
 
 type Response struct {
-	Code    int         `bson:"code" json:"code"`
-	Type    string      `bson:"type" json:"type"`
-	Message interface{} `bson:"message" json:"message"`
+	Code int         `bson:"code" json:"code"`
+	Msg  string      `bson:"msg" json:"msg"`
+	Data interface{} `bson:"data" json:"data"`
 }
 
 type UserInfoRes struct {
@@ -25,12 +25,10 @@ type UserInfoRes struct {
 
 const (
 	StatusSuccess  = "success"
-	StatusBadReq   = "bad_req"
 	StatusNotLogin = "not_login"
-	StatusNotAllow = "not_allow"
-	StatusExist    = "had_exist"
+	StatusExist    = "bad_exist"
+	StatusRequest  = "bad_req"
 	StatusError    = "error"
-	StatusNotValid = "not_invalid"
 )
 
 func Register(c *gin.Context) {
@@ -38,25 +36,23 @@ func Register(c *gin.Context) {
 	var user models.RegisterReq
 	err := json.NewDecoder(c.Request.Body).Decode(&user)
 	if err != nil || user.UserName == "" || user.Password == "" {
-		c.JSON(http.StatusOK, &Response{
-			Code:    400,
-			Type:    "fail",
-			Message: "username and password do not match",
+		c.JSON(http.StatusBadRequest, &Response{
+			Code: http.StatusBadRequest,
+			Msg:  StatusRequest,
 		})
 		return
 	}
 	err = models.Register(user.Name, user.UserName, user.Password)
 	if err != nil {
-		c.JSON(http.StatusOK, &Response{
-			Code:    400,
-			Type:    "fail",
-			Message: "username and password do not match",
+		c.JSON(http.StatusBadRequest, &Response{
+			Code: http.StatusBadRequest,
+			Msg:  StatusExist,
 		})
 		return
 	}
 	c.JSON(http.StatusOK, &Response{
-		Code: 200,
-		Type: "success",
+		Code: http.StatusOK,
+		Msg:  StatusSuccess,
 	})
 }
 
@@ -68,20 +64,18 @@ func Login(c *gin.Context) {
 	err := json.NewDecoder(c.Request.Body).Decode(&user)
 	if err != nil {
 		fmt.Println(err)
-		c.JSON(http.StatusOK, &Response{
-			Code:    400,
-			Type:    "fail",
-			Message: "bad_eq",
+		c.JSON(http.StatusBadRequest, &Response{
+			Code: http.StatusBadRequest,
+			Msg:  StatusRequest,
 		})
 	}
 	exist := models.IsExistUsername(user.UserName)
 	if exist {
 		err = models.Login(user.UserName, user.Password)
 		if err != nil {
-			c.JSON(http.StatusOK, &Response{
-				Code:    400,
-				Type:    "fail",
-				Message: "username and password do not match",
+			c.JSON(http.StatusBadRequest, &Response{
+				Code: http.StatusBadRequest,
+				Msg:  StatusExist,
 			})
 		} else {
 			var u models.User
@@ -89,21 +83,16 @@ func Login(c *gin.Context) {
 			fmt.Println(u.UserName)
 			session.Set("sessionid", u.UserName)
 			session.Save()
-			///////////////
-
-			///////////////
 			c.JSON(http.StatusOK, &Response{
-				Code:    http.StatusOK,
-				Type:    "success",
-				Message: u.UserName,
+				Code: http.StatusOK,
+				Msg:  StatusSuccess,
 			})
 		}
 
 	} else {
-		c.JSON(http.StatusOK, &Response{
-			Code:    400,
-			Type:    "fail",
-			Message: "the user not exist",
+		c.JSON(http.StatusBadRequest, &Response{
+			Code: http.StatusBadRequest,
+			Msg:  StatusExist,
 		})
 	}
 }

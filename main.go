@@ -30,17 +30,15 @@ func main() {
 		}
 		chat := api.Group("/chat")
 		{
+			chat.Use(controllers.Authorize())
 			//建立websocket连接
 			chat.GET("/connect", controllers.ConnectWeb)
-			//发消息
-			chat.POST("/send_message", controllers.SendMessage)
 			//查询会话列表
 			chat.GET("", controllers.FindChats)
 			//修改会话状态
 			chat.PUT("/:id", controllers.UpdateChat)
 			//查询历史聊天记录
 			chat.GET("/find_messages", controllers.FindMessages)
-			chat.Use(controllers.Authorize())
 		}
 
 	}

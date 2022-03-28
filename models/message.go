@@ -28,19 +28,18 @@ func (s MessageSort) Less(i, j int) bool {
 	return s[i].PublishedTime > s[j].PublishedTime
 }
 
-func AddMessage(message Message, state int) error {
-	message.State = state
+func AddMessage(message *Message) error {
 	return db.Create(&message).Error
 }
 
 func FindUnReadMessageByRecid(recid string) []Message {
 	var messages []Message
-	db.Where("recid = ? and state = ?", recid, 0).Find(&messages)
+	db.Where("recid = ? and state = ?", recid, 0).Order("published_time desc").Find(&messages)
 	return messages
 }
 
-func UpdateUnReadMessageByRecid(recid string) error {
-	return db.Model(&Message{}).Where("recid = ? and state = ?", recid, 0).Update("state", 1).Error
+func UpdateUnReadMessageById(id int) error {
+	return db.Model(&Message{}).Where("id = ? and state = ?", id, 0).Update("state", 1).Error
 }
 
 func FindMessagesByRecid(recid string, startTime, endTime uint64) []Message {

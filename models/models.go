@@ -3,6 +3,7 @@ package models
 import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"time"
 )
 
 var db *gorm.DB
@@ -17,5 +18,9 @@ func Setup() {
 	}
 	db.SingularTable(true)
 	db.LogMode(true)
+	sqlDB := db.DB()
+	sqlDB.SetMaxIdleConns(64)
+	sqlDB.SetMaxOpenConns(64)
+	sqlDB.SetConnMaxLifetime(time.Minute)
 
 }
